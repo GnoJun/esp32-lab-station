@@ -6,10 +6,12 @@
 #include "DisplayManager.h"
 #include "MenuManager.h"
 #include "I2CScanner.h"
+#include "SignalGenerator.h"
 
 ButtonManager buttonManager;
 MenuManager menuManager;
 I2CScanner i2cScanner;
+SignalGenerator signalGenerator;
 
 // Main OLED: I2C 0x3C -> U8g2 address 0x78
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C
@@ -146,8 +148,10 @@ void updateUI()
 
         case AppPage::SignalGenerator:
 
-            displayManager.showToolPage(
-                "SIGNAL GENERATOR"
+            displayManager.showSignalGenerator(
+                signalGenerator.getFrequency(),
+                signalGenerator.getDutyPercent(),
+                signalGenerator.isOutputEnabled()
             );
 
             break;
@@ -301,15 +305,6 @@ void setup()
     digitalWrite(Pins::BUZZER, LOW);
 
 
-    // -------------------------
-    // Signal output
-    // -------------------------
-
-    pinMode(Pins::SIGNAL_OUT, OUTPUT);
-
-    // Keep signal generator OFF during startup
-    digitalWrite(Pins::SIGNAL_OUT, LOW);
-
 
     // -------------------------
     // Oscilloscope input
@@ -326,6 +321,7 @@ void setup()
         Pins::I2C_SDA,
         Pins::I2C_SCL
     );
+  
 
     // -------------------------
     // OLED addresses
@@ -335,6 +331,20 @@ void setup()
     u8g2_menu.setI2CAddress(0x7A);
 
     i2cScanner.begin();
+
+    if (!signalGenerator.begin())
+    {
+        Serial.println(
+            "ERROR: Signal Generator init failed"
+        );
+    }
+    else
+    {
+        Serial.println(
+            "Signal Generator ready"
+        );
+    }
+
     displayManager.begin();
     menuManager.begin();
 
@@ -381,6 +391,45 @@ void loop()
     AppPage pageBefore =
         menuManager.getCurrentPage();
 
+    // --------------------------------------------------
+    // Signal Generator internal controls
+    // --------------------------------------------------
+
+    if (pageBefore == AppPage::SignalGenerator)
+    {
+        if (event == ButtonEvent::Up)
+        {
+            signalGenerator.increaseFrequency();
+
+            updateUI();
+
+            return;
+        }
+
+
+        if (event == ButtonEvent::Down)
+        {
+            signalGenerator.decreaseFrequency();
+
+            updateUI();
+
+            return;
+        }
+
+
+        if (event == ButtonEvent::Confirm)
+        {
+            signalGenerator.toggleOutput();
+
+            updateUI();
+
+            return;
+        }
+
+
+        // BACK is intentionally not handled here.
+        // MenuManager will return to Main Menu.
+    }
 
     // --------------------------------------------------
     // I2C Scanner internal controls

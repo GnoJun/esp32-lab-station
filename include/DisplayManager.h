@@ -36,6 +36,12 @@ public:
         uint8_t deviceCount
     );
 
+    void showSignalGenerator(
+        uint32_t frequencyHz,
+        uint8_t dutyPercent,
+        bool outputEnabled
+    );
+
 
 private:
     U8G2& mainDisplay;

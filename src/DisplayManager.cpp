@@ -485,3 +485,142 @@ void DisplayManager::showI2CScanner(
 
     menuDisplay.sendBuffer();
 }
+
+void DisplayManager::showSignalGenerator(
+    uint32_t frequencyHz,
+    uint8_t dutyPercent,
+    bool outputEnabled
+)
+{
+    // ==============================================
+    // Main OLED
+    // ==============================================
+
+    mainDisplay.clearBuffer();
+
+    mainDisplay.setFont(
+        u8g2_font_6x12_tf
+    );
+
+
+    mainDisplay.drawStr(
+        0,
+        10,
+        "SIGNAL GENERATOR"
+    );
+
+    mainDisplay.drawHLine(
+        0,
+        13,
+        128
+    );
+
+
+    char frequencyText[24];
+
+    snprintf(
+        frequencyText,
+        sizeof(frequencyText),
+        "Freq: %lu Hz",
+        static_cast<unsigned long>(
+            frequencyHz
+        )
+    );
+
+
+    mainDisplay.drawStr(
+        0,
+        28,
+        frequencyText
+    );
+
+
+    char dutyText[20];
+
+    snprintf(
+        dutyText,
+        sizeof(dutyText),
+        "Duty: %u%%",
+        dutyPercent
+    );
+
+
+    mainDisplay.drawStr(
+        0,
+        41,
+        dutyText
+    );
+
+
+    if (outputEnabled)
+    {
+        mainDisplay.drawStr(
+            0,
+            56,
+            "Output: ON"
+        );
+    }
+    else
+    {
+        mainDisplay.drawStr(
+            0,
+            56,
+            "Output: OFF"
+        );
+    }
+
+
+    mainDisplay.sendBuffer();
+
+
+    // ==============================================
+    // Menu OLED
+    // ==============================================
+
+    menuDisplay.clearBuffer();
+
+    menuDisplay.setFont(
+        u8g2_font_6x12_tf
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        10,
+        "SIGNAL GEN"
+    );
+
+    menuDisplay.drawHLine(
+        0,
+        13,
+        128
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        27,
+        "UP:   Frequency +"
+    );
+
+    menuDisplay.drawStr(
+        0,
+        39,
+        "DOWN: Frequency -"
+    );
+
+    menuDisplay.drawStr(
+        0,
+        51,
+        "OK: Output ON/OFF"
+    );
+
+    menuDisplay.drawStr(
+        0,
+        63,
+        "BACK: Return"
+    );
+
+
+    menuDisplay.sendBuffer();
+}
