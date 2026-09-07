@@ -22,6 +22,8 @@ public:
 
     ButtonEvent update();
 
+    bool isHeld(ButtonEvent event) const;
+
 
 private:
     struct ButtonState

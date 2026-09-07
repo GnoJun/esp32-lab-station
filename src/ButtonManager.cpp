@@ -127,3 +127,18 @@ ButtonEvent ButtonManager::update()
 
     return detectedEvent;
 }
+
+bool ButtonManager::isHeld(
+    ButtonEvent event
+) const
+{
+    for (size_t i = 0; i < BUTTON_COUNT; i++)
+    {
+        if (buttons[i].event == event)
+        {
+            return buttons[i].stableState == LOW;
+        }
+    }
+
+    return false;
+}

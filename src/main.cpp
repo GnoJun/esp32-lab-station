@@ -389,56 +389,88 @@ void loop()
         buttonManager.update();
 
 
+    AppPage pageBefore =
+        menuManager.getCurrentPage();
+
+
+    // --------------------------------------------------
+    // Signal Generator
+    // --------------------------------------------------
+
+    if (pageBefore == AppPage::SignalGenerator)
+    {
+        // Handle normal press events
+        if (event != ButtonEvent::None)
+        {
+            SignalPageResult result =
+                signalGeneratorPage.handleEvent(
+                    event,
+                    signalGenerator
+                );
+
+
+            if (
+                result ==
+                SignalPageResult::Redraw
+            )
+            {
+                updateUI();
+
+                return;
+            }
+
+
+            if (
+                result ==
+                SignalPageResult::ExitRequested
+            )
+            {
+                bool changed =
+                    menuManager.handleEvent(
+                        ButtonEvent::Back
+                    );
+
+
+                if (changed)
+                {
+                    updateUI();
+                }
+
+
+                return;
+            }
+        }
+
+
+        // Handle long-press auto repeat
+        SignalPageResult holdResult =
+            signalGeneratorPage.updateHold(
+                buttonManager,
+                signalGenerator
+            );
+
+
+        if (
+            holdResult ==
+            SignalPageResult::Redraw
+        )
+        {
+            updateUI();
+        }
+
+
+        return;
+    }
+
+
+    // Other pages still require a button event
     if (event == ButtonEvent::None)
     {
         return;
     }
 
 
-    AppPage pageBefore =
-        menuManager.getCurrentPage();
-
-    // --------------------------------------------------
-    // Signal Generator internal controls
-    // --------------------------------------------------
-
-    if (pageBefore == AppPage::SignalGenerator)
-    {
-        SignalPageResult result =
-            signalGeneratorPage.handleEvent(
-                event,
-                signalGenerator
-            );
-
-
-        if (result == SignalPageResult::Redraw)
-        {
-            updateUI();
-
-            return;
-        }
-
-
-        if (
-            result ==
-            SignalPageResult::ExitRequested
-        )
-        {
-            bool changed =
-                menuManager.handleEvent(
-                    ButtonEvent::Back
-                );
-
-
-            if (changed)
-            {
-                updateUI();
-            }
-
-
-            return;
-        }
-    }
+    // Existing I2C Scanner / Menu code continues below...
 
     // --------------------------------------------------
     // I2C Scanner internal controls
