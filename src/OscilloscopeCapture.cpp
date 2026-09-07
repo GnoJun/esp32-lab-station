@@ -26,6 +26,10 @@ void OscilloscopeCapture::begin()
     capturing = false;
 
     frameAvailable = false;
+
+    frameStartedOnTrigger = false;
+
+    measuredFrequencyHz = 0.0f;
 }
 
 
@@ -79,6 +83,9 @@ void OscilloscopeCapture::startCapture()
     previousTriggerSampleValid =
         false;
 
+    frameStartedOnTrigger =
+    false;
+
 
     nextSampleTimeUs =
         micros();
@@ -116,13 +123,24 @@ bool OscilloscopeCapture::update()
         micros();
 
 
-    if (
-        static_cast<int32_t>(
-            now - nextSampleTimeUs
-        ) < 0
-    )
+    bool fastTriggerSearch =
+        waitingForTrigger &&
+        (
+            getSampleIntervalUs() <=
+            FAST_CAPTURE_MAX_INTERVAL_US
+        );
+
+
+    if (!fastTriggerSearch)
     {
-        return false;
+        if (
+            static_cast<int32_t>(
+                now - nextSampleTimeUs
+            ) < 0
+        )
+        {
+            return false;
+        }
     }
 
 
@@ -173,8 +191,15 @@ bool OscilloscopeCapture::update()
         if (!triggerFound &&
             !triggerTimedOut)
         {
-            nextSampleTimeUs +=
-                getSampleIntervalUs();
+            if (
+                getSampleIntervalUs() >
+                FAST_CAPTURE_MAX_INTERVAL_US
+            )
+            {
+                nextSampleTimeUs +=
+                    getSampleIntervalUs();
+            }
+
 
             return false;
         }
@@ -183,6 +208,11 @@ bool OscilloscopeCapture::update()
         // Trigger found or AUTO timeout reached.
         waitingForTrigger =
             false;
+
+
+        frameStartedOnTrigger =
+            triggerFound;
+
 
         sampleIndex =
             0;
@@ -196,9 +226,35 @@ bool OscilloscopeCapture::update()
 
         storeSample(raw);
 
+        if (
+            sampleIndex == 1 &&
+            getSampleIntervalUs() <=
+                FAST_CAPTURE_MAX_INTERVAL_US
+        )
+        {
+            nextSampleTimeUs =
+                micros() +
+                getSampleIntervalUs();
 
-        nextSampleTimeUs +=
+
+            return captureFastRemainder();
+        }
+
+
+        nextSampleTimeUs =
+            micros() +
             getSampleIntervalUs();
+
+
+        // Fast timebases use a tightly timed capture.
+        if (
+            getSampleIntervalUs() <=
+            FAST_CAPTURE_MAX_INTERVAL_US
+        )
+        {
+            return captureFastRemainder();
+        }
+
 
         return false;
     }
@@ -217,39 +273,7 @@ bool OscilloscopeCapture::update()
 
     if (sampleIndex >= SAMPLE_COUNT)
     {
-        minRaw =
-            workingMinRaw;
-
-        maxRaw =
-            workingMaxRaw;
-
-        uint16_t signalRange =
-            maxRaw - minRaw;
-
-
-        if (signalRange >= MIN_TRIGGER_RANGE_RAW)
-        {
-            triggerLevelRaw =
-                minRaw +
-                signalRange / 2;
-
-            triggerReferenceValid =
-                true;
-        }
-        else
-        {
-            triggerReferenceValid =
-                false;
-        }
-
-        capturing =
-            false;
-
-        frameAvailable =
-            true;
-
-
-        return true;
+        return finishFrame();
     }
 
 
@@ -409,4 +433,80 @@ uint32_t OscilloscopeCapture::getTriggerTimeoutUs() const
 
 
     return frameDuration;
+}
+
+bool OscilloscopeCapture::finishFrame()
+{
+    minRaw =
+        workingMinRaw;
+
+    maxRaw =
+        workingMaxRaw;
+
+
+    uint16_t signalRange =
+        maxRaw - minRaw;
+
+
+    if (signalRange >= MIN_TRIGGER_RANGE_RAW)
+    {
+        triggerLevelRaw =
+            minRaw +
+            signalRange / 2;
+
+        triggerReferenceValid =
+            true;
+    }
+    else
+    {
+        triggerReferenceValid =
+            false;
+    }
+
+
+
+
+    capturing =
+        false;
+
+    frameAvailable =
+        true;
+
+
+    return true;
+}
+
+bool OscilloscopeCapture::captureFastRemainder()
+{
+    uint32_t intervalUs =
+        getSampleIntervalUs();
+
+
+    while (sampleIndex < SAMPLE_COUNT)
+    {
+        while (
+            static_cast<int32_t>(
+                micros() - nextSampleTimeUs
+            ) < 0
+        )
+        {
+            // Tight timing wait.
+        }
+
+
+        uint16_t raw =
+            analogRead(
+                Pins::SCOPE_IN
+            );
+
+
+        storeSample(raw);
+
+
+        nextSampleTimeUs +=
+            intervalUs;
+    }
+
+
+    return finishFrame();
 }

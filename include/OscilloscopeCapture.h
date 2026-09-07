@@ -32,6 +32,8 @@ public:
 
     uint32_t getFrameDurationUs() const;
 
+    float getMeasuredFrequencyHz() const;
+
 
 private:
     static constexpr uint8_t TIMEBASE_COUNT = 6;
@@ -95,4 +97,18 @@ private:
     void storeSample(
         uint16_t raw
     );
+
+    static constexpr uint32_t FAST_CAPTURE_MAX_INTERVAL_US = 100;
+
+
+    bool frameStartedOnTrigger = false;
+
+    float measuredFrequencyHz = 0.0f;
+
+
+    bool captureFastRemainder();
+
+    bool finishFrame();
+
+    void calculateFrequency();
 };
