@@ -61,6 +61,14 @@ public:
         uint32_t sampleIntervalUs
     );
 
+    void showOscilloscopeCapturing(
+        uint32_t sampleIntervalUs
+    );
+
+    void showOscilloscopeControls(
+        uint32_t sampleIntervalUs
+    );
+
 
 private:
     U8G2& mainDisplay;

@@ -145,6 +145,16 @@ void updateUI()
 
         case AppPage::Oscilloscope:
         {
+            if (!oscilloscopeCapture.hasFrame())
+            {
+                displayManager.showOscilloscopeCapturing(
+                    oscilloscopeCapture.getSampleIntervalUs()
+                );
+
+                break;
+            }
+
+
             uint16_t samples[
                 OscilloscopeCapture::SAMPLE_COUNT
             ];
@@ -418,32 +428,15 @@ void loop()
         menuManager.getCurrentPage();
 
     // --------------------------------------------------
-    // Oscilloscope ADC baseline
+    // Oscilloscope
     // --------------------------------------------------
 
     if (pageBefore == AppPage::Oscilloscope)
     {
-        static unsigned long lastScopeUpdate = 0;
+        // ----------------------------------------------
+        // BACK
+        // ----------------------------------------------
 
-        unsigned long now =
-            millis();
-
-
-        // Refresh about 5 times per second.
-        if (
-            now - lastScopeUpdate >= 100
-        )
-        {
-            lastScopeUpdate =
-                now;
-
-            oscilloscopeCapture.capture();
-
-            updateUI();
-        }
-
-
-        // BACK still belongs to MenuManager.
         if (event == ButtonEvent::Back)
         {
             bool changed =
@@ -456,6 +449,66 @@ void loop()
             {
                 updateUI();
             }
+
+
+            return;
+        }
+
+
+        // ----------------------------------------------
+        // Faster timebase
+        // ----------------------------------------------
+
+        if (event == ButtonEvent::Up)
+        {
+            if (
+                oscilloscopeCapture.fasterTimebase()
+            )
+            {
+                displayManager.showOscilloscopeControls(
+                    oscilloscopeCapture.getSampleIntervalUs()
+                );
+            }
+
+            return;
+        }
+
+
+        // ----------------------------------------------
+        // Slower timebase
+        // ----------------------------------------------
+
+        if (event == ButtonEvent::Down)
+        {
+            if (
+                oscilloscopeCapture.slowerTimebase()
+            )
+            {
+                displayManager.showOscilloscopeControls(
+                    oscilloscopeCapture.getSampleIntervalUs()
+                );
+            }
+
+            return;
+        }
+
+
+        // ----------------------------------------------
+        // Capture one sample when required
+        // ----------------------------------------------
+
+        bool frameComplete =
+            oscilloscopeCapture.update();
+
+
+        if (frameComplete)
+        {
+            updateUI();
+
+
+            // Immediately begin collecting
+            // the next frame.
+            oscilloscopeCapture.startCapture();
         }
 
 
@@ -591,7 +644,11 @@ void loop()
         pageAfter == AppPage::Oscilloscope
     )
     {
-        oscilloscopeCapture.capture();
+        oscilloscopeCapture.startCapture();
+
+        displayManager.showOscilloscopeControls(
+            oscilloscopeCapture.getSampleIntervalUs()
+        );
     }
 
 

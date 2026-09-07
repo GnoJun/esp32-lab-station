@@ -956,10 +956,126 @@ void DisplayManager::showOscilloscopeWaveform(
     mainDisplay.sendBuffer();
 
 
+    
+}
+
+void DisplayManager::showOscilloscopeCapturing(
+    uint32_t sampleIntervalUs
+)
+{
     // ==================================================
-    // Menu OLED - Capture information
+    // Main OLED
     // ==================================================
 
+    mainDisplay.clearBuffer();
+
+    mainDisplay.setFont(
+        u8g2_font_6x12_tf
+    );
+
+
+    mainDisplay.drawStr(
+        0,
+        10,
+        "OSCILLOSCOPE"
+    );
+
+    mainDisplay.drawHLine(
+        0,
+        13,
+        128
+    );
+
+
+    mainDisplay.drawStr(
+        25,
+        35,
+        "Capturing..."
+    );
+
+
+    mainDisplay.sendBuffer();
+
+
+    // ==================================================
+    // Menu OLED
+    // ==================================================
+
+    menuDisplay.clearBuffer();
+
+    menuDisplay.setFont(
+        u8g2_font_6x12_tf
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        10,
+        "TIMEBASE"
+    );
+
+    menuDisplay.drawHLine(
+        0,
+        13,
+        128
+    );
+
+
+    char timeText[24];
+
+
+    if (sampleIntervalUs < 1000)
+    {
+        snprintf(
+            timeText,
+            sizeof(timeText),
+            "%lu us / point",
+            static_cast<unsigned long>(
+                sampleIntervalUs
+            )
+        );
+    }
+    else
+    {
+        snprintf(
+            timeText,
+            sizeof(timeText),
+            "%lu ms / point",
+            static_cast<unsigned long>(
+                sampleIntervalUs / 1000
+            )
+        );
+    }
+
+
+    menuDisplay.drawStr(
+        0,
+        29,
+        timeText
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        42,
+        "UP/DN: Timebase"
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        57,
+        "BACK: Return"
+    );
+
+
+    menuDisplay.sendBuffer();
+}
+
+void DisplayManager::showOscilloscopeControls(
+    uint32_t sampleIntervalUs
+)
+{
     menuDisplay.clearBuffer();
 
     menuDisplay.setFont(
@@ -980,46 +1096,57 @@ void DisplayManager::showOscilloscopeWaveform(
     );
 
 
-    char intervalText[24];
+    char timeText[24];
 
-    snprintf(
-        intervalText,
-        sizeof(intervalText),
-        "Sample: %lu us",
-        static_cast<unsigned long>(
-            sampleIntervalUs
-        )
-    );
+
+    if (sampleIntervalUs < 1000)
+    {
+        snprintf(
+            timeText,
+            sizeof(timeText),
+            "Time: %lu us/pt",
+            static_cast<unsigned long>(
+                sampleIntervalUs
+            )
+        );
+    }
+    else
+    {
+        snprintf(
+            timeText,
+            sizeof(timeText),
+            "Time: %lu ms/pt",
+            static_cast<unsigned long>(
+                sampleIntervalUs / 1000
+            )
+        );
+    }
 
 
     menuDisplay.drawStr(
         0,
         28,
-        intervalText
-    );
-
-
-    char rangeText[24];
-
-    snprintf(
-        rangeText,
-        sizeof(rangeText),
-        "Raw: %u-%u",
-        minRaw,
-        maxRaw
+        timeText
     );
 
 
     menuDisplay.drawStr(
         0,
         41,
-        rangeText
+        "Trigger: AUTO RISE"
     );
 
 
     menuDisplay.drawStr(
         0,
-        55,
+        53,
+        "UP/DN: Timebase"
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        64,
         "BACK: Return"
     );
 
