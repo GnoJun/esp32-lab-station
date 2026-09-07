@@ -11,10 +11,17 @@ public:
     bool increaseFrequency();
     bool decreaseFrequency();
 
+    bool increaseDuty();
+    bool decreaseDuty();
+
+    bool increaseStep();
+    bool decreaseStep();
+
     bool toggleOutput();
 
     uint32_t getFrequency() const;
     uint8_t getDutyPercent() const;
+    uint32_t getStepHz() const;
     bool isOutputEnabled() const;
 
 
@@ -26,6 +33,8 @@ private:
 
     uint8_t dutyPercent = 50;
 
+    uint32_t stepHz = 100;
+
     bool outputEnabled = false;
 
     uint8_t resolutionBits = 13;
@@ -33,7 +42,6 @@ private:
 
     bool applySettings();
 
-    uint32_t getFrequencyStep() const;
 
     uint8_t chooseResolution(
         uint32_t frequency

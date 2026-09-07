@@ -83,7 +83,7 @@ uint8_t SignalGenerator::chooseResolution(
 {
     if (frequency <= 20)
     {
-        return 15;
+        return 14;
     }
 
     if (frequency <= 200)
@@ -187,101 +187,109 @@ bool SignalGenerator::applySettings()
     return true;
 }
 
-uint32_t SignalGenerator::getFrequencyStep() const
-{
-    if (frequencyHz < 20)
-    {
-        return 1;
-    }
-
-    if (frequencyHz < 100)
-    {
-        return 5;
-    }
-
-    if (frequencyHz < 1000)
-    {
-        return 50;
-    }
-
-    if (frequencyHz < 10000)
-    {
-        return 500;
-    }
-
-    return 1000;
-}
 
 bool SignalGenerator::increaseFrequency()
 {
-    uint32_t step =
-        getFrequencyStep();
-
-
     if (frequencyHz >= MAX_FREQUENCY_HZ)
     {
         return false;
     }
 
 
-    uint32_t newFrequency =
-        frequencyHz + step;
+    uint32_t oldFrequency =
+        frequencyHz;
 
 
-    if (newFrequency > MAX_FREQUENCY_HZ)
+    if (
+        stepHz >
+        (MAX_FREQUENCY_HZ - frequencyHz)
+    )
     {
-        newFrequency =
+        frequencyHz =
             MAX_FREQUENCY_HZ;
+    }
+    else
+    {
+        frequencyHz += stepHz;
     }
 
 
-    frequencyHz =
-        newFrequency;
+    if (!applySettings())
+    {
+        frequencyHz =
+            oldFrequency;
+
+        applySettings();
+
+        return false;
+    }
 
 
-    return applySettings();
+    return true;
 }
 
 bool SignalGenerator::decreaseFrequency()
 {
-    uint32_t step =
-        getFrequencyStep();
-
-
     if (frequencyHz <= MIN_FREQUENCY_HZ)
     {
         return false;
     }
 
 
-    if (frequencyHz <= step)
+    uint32_t oldFrequency =
+        frequencyHz;
+
+
+    if (
+        frequencyHz <=
+        MIN_FREQUENCY_HZ + stepHz
+    )
     {
         frequencyHz =
             MIN_FREQUENCY_HZ;
     }
     else
     {
-        frequencyHz -= step;
+        frequencyHz -= stepHz;
     }
 
 
-    if (frequencyHz < MIN_FREQUENCY_HZ)
+    if (!applySettings())
     {
         frequencyHz =
-            MIN_FREQUENCY_HZ;
+            oldFrequency;
+
+        applySettings();
+
+        return false;
     }
 
 
-    return applySettings();
+    return true;
 }
 
 bool SignalGenerator::toggleOutput()
 {
+    bool oldState =
+        outputEnabled;
+
+
     outputEnabled =
         !outputEnabled;
 
 
-    return applySettings();
+    if (!applySettings())
+    {
+        outputEnabled =
+            oldState;
+
+        applySettings();
+
+        return false;
+    }
+
+
+    return true;
 }
 
 uint32_t SignalGenerator::getFrequency() const
@@ -295,9 +303,126 @@ uint8_t SignalGenerator::getDutyPercent() const
     return dutyPercent;
 }
 
+uint32_t SignalGenerator::getStepHz() const
+{
+    return stepHz;
+}
 
 bool SignalGenerator::isOutputEnabled() const
 {
     return outputEnabled;
 }
 
+bool SignalGenerator::increaseDuty()
+{
+    if (dutyPercent >= 99)
+    {
+        return false;
+    }
+
+
+    uint8_t oldDuty =
+        dutyPercent;
+
+
+    dutyPercent++;
+
+
+    if (!applySettings())
+    {
+        dutyPercent =
+            oldDuty;
+
+        applySettings();
+
+        return false;
+    }
+
+
+    return true;
+}
+
+bool SignalGenerator::decreaseDuty()
+{
+    if (dutyPercent <= 1)
+    {
+        return false;
+    }
+
+
+    uint8_t oldDuty =
+        dutyPercent;
+
+
+    dutyPercent--;
+
+
+    if (!applySettings())
+    {
+        dutyPercent =
+            oldDuty;
+
+        applySettings();
+
+        return false;
+    }
+
+
+    return true;
+}
+
+bool SignalGenerator::increaseStep()
+{
+    switch (stepHz)
+    {
+        case 1:
+            stepHz = 10;
+            break;
+
+        case 10:
+            stepHz = 100;
+            break;
+
+        case 100:
+            stepHz = 1000;
+            break;
+
+        case 1000:
+            return false;
+
+        default:
+            stepHz = 100;
+            break;
+    }
+
+
+    return true;
+}
+
+bool SignalGenerator::decreaseStep()
+{
+    switch (stepHz)
+    {
+        case 1000:
+            stepHz = 100;
+            break;
+
+        case 100:
+            stepHz = 10;
+            break;
+
+        case 10:
+            stepHz = 1;
+            break;
+
+        case 1:
+            return false;
+
+        default:
+            stepHz = 100;
+            break;
+    }
+
+
+    return true;
+}

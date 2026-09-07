@@ -39,7 +39,10 @@ public:
     void showSignalGenerator(
         uint32_t frequencyHz,
         uint8_t dutyPercent,
-        bool outputEnabled
+        uint32_t stepHz,
+        bool outputEnabled,
+        uint8_t selectedIndex,
+        bool editing
     );
 
 

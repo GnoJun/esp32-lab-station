@@ -486,15 +486,19 @@ void DisplayManager::showI2CScanner(
     menuDisplay.sendBuffer();
 }
 
+
 void DisplayManager::showSignalGenerator(
     uint32_t frequencyHz,
     uint8_t dutyPercent,
-    bool outputEnabled
+    uint32_t stepHz,
+    bool outputEnabled,
+    uint8_t selectedIndex,
+    bool editing
 )
 {
-    // ==============================================
+    // ==================================================
     // Main OLED
-    // ==============================================
+    // ==================================================
 
     mainDisplay.clearBuffer();
 
@@ -516,56 +520,88 @@ void DisplayManager::showSignalGenerator(
     );
 
 
-    char frequencyText[24];
+    char frequencyText[22];
+    char dutyText[22];
+    char stepText[22];
+    char outputText[22];
+
 
     snprintf(
         frequencyText,
         sizeof(frequencyText),
-        "Freq: %lu Hz",
+        "Freq   %lu Hz",
         static_cast<unsigned long>(
             frequencyHz
         )
     );
 
 
-    mainDisplay.drawStr(
-        0,
-        28,
-        frequencyText
-    );
-
-
-    char dutyText[20];
-
     snprintf(
         dutyText,
         sizeof(dutyText),
-        "Duty: %u%%",
+        "Duty   %u%%",
         dutyPercent
     );
 
 
-    mainDisplay.drawStr(
-        0,
-        41,
-        dutyText
+    snprintf(
+        stepText,
+        sizeof(stepText),
+        "Step   %lu Hz",
+        static_cast<unsigned long>(
+            stepHz
+        )
     );
 
 
-    if (outputEnabled)
+    snprintf(
+        outputText,
+        sizeof(outputText),
+        "Output %s",
+        outputEnabled ? "ON" : "OFF"
+    );
+
+
+    const char* rows[] =
     {
-        mainDisplay.drawStr(
-            0,
-            56,
-            "Output: ON"
-        );
-    }
-    else
+        frequencyText,
+        dutyText,
+        stepText,
+        outputText
+    };
+
+
+    for (uint8_t i = 0; i < 4; i++)
     {
+        uint8_t y =
+            25 + i * 12;
+
+
+        if (i == selectedIndex)
+        {
+            if (editing)
+            {
+                mainDisplay.drawStr(
+                    0,
+                    y,
+                    "*"
+                );
+            }
+            else
+            {
+                mainDisplay.drawStr(
+                    0,
+                    y,
+                    ">"
+                );
+            }
+        }
+
+
         mainDisplay.drawStr(
-            0,
-            56,
-            "Output: OFF"
+            10,
+            y,
+            rows[i]
         );
     }
 
@@ -573,9 +609,9 @@ void DisplayManager::showSignalGenerator(
     mainDisplay.sendBuffer();
 
 
-    // ==============================================
+    // ==================================================
     // Menu OLED
-    // ==============================================
+    // ==================================================
 
     menuDisplay.clearBuffer();
 
@@ -584,42 +620,76 @@ void DisplayManager::showSignalGenerator(
     );
 
 
-    menuDisplay.drawStr(
-        0,
-        10,
-        "SIGNAL GEN"
-    );
+    if (editing)
+    {
+        menuDisplay.drawStr(
+            0,
+            10,
+            "EDIT MODE"
+        );
 
-    menuDisplay.drawHLine(
-        0,
-        13,
-        128
-    );
+        menuDisplay.drawHLine(
+            0,
+            13,
+            128
+        );
 
+        menuDisplay.drawStr(
+            0,
+            28,
+            "UP:      Increase"
+        );
 
-    menuDisplay.drawStr(
-        0,
-        27,
-        "UP:   Frequency +"
-    );
+        menuDisplay.drawStr(
+            0,
+            40,
+            "DOWN:    Decrease"
+        );
 
-    menuDisplay.drawStr(
-        0,
-        39,
-        "DOWN: Frequency -"
-    );
+        menuDisplay.drawStr(
+            0,
+            52,
+            "OK:        Done"
+        );
 
-    menuDisplay.drawStr(
-        0,
-        51,
-        "OK: Output ON/OFF"
-    );
+        menuDisplay.drawStr(
+            0,
+            64,
+            "BACK:      Done"
+        );
+    }
+    else
+    {
+        menuDisplay.drawStr(
+            0,
+            10,
+            "SIGNAL GEN"
+        );
 
-    menuDisplay.drawStr(
-        0,
-        63,
-        "BACK: Return"
-    );
+        menuDisplay.drawHLine(
+            0,
+            13,
+            128
+        );
+
+        menuDisplay.drawStr(
+            0,
+            28,
+            "UP/DOWN:      Select"
+        );
+
+        menuDisplay.drawStr(
+            0,
+            40,
+            "OK:          Confirm"
+        );
+
+        menuDisplay.drawStr(
+            0,
+            52,
+            "BACK:      Main Menu"
+        );
+    }
 
 
     menuDisplay.sendBuffer();

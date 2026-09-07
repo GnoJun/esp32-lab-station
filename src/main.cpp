@@ -7,11 +7,13 @@
 #include "MenuManager.h"
 #include "I2CScanner.h"
 #include "SignalGenerator.h"
+#include "SignalGeneratorPage.h"
 
 ButtonManager buttonManager;
 MenuManager menuManager;
 I2CScanner i2cScanner;
 SignalGenerator signalGenerator;
+SignalGeneratorPage signalGeneratorPage;
 
 // Main OLED: I2C 0x3C -> U8g2 address 0x78
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C
@@ -151,7 +153,10 @@ void updateUI()
             displayManager.showSignalGenerator(
                 signalGenerator.getFrequency(),
                 signalGenerator.getDutyPercent(),
-                signalGenerator.isOutputEnabled()
+                signalGenerator.getStepHz(),
+                signalGenerator.isOutputEnabled(),
+                signalGeneratorPage.getSelectedIndex(),
+                signalGeneratorPage.isEditing()
             );
 
             break;
@@ -345,6 +350,8 @@ void setup()
         );
     }
 
+    signalGeneratorPage.begin();
+
     displayManager.begin();
     menuManager.begin();
 
@@ -397,38 +404,40 @@ void loop()
 
     if (pageBefore == AppPage::SignalGenerator)
     {
-        if (event == ButtonEvent::Up)
-        {
-            signalGenerator.increaseFrequency();
+        SignalPageResult result =
+            signalGeneratorPage.handleEvent(
+                event,
+                signalGenerator
+            );
 
+
+        if (result == SignalPageResult::Redraw)
+        {
             updateUI();
 
             return;
         }
 
 
-        if (event == ButtonEvent::Down)
+        if (
+            result ==
+            SignalPageResult::ExitRequested
+        )
         {
-            signalGenerator.decreaseFrequency();
+            bool changed =
+                menuManager.handleEvent(
+                    ButtonEvent::Back
+                );
 
-            updateUI();
+
+            if (changed)
+            {
+                updateUI();
+            }
+
 
             return;
         }
-
-
-        if (event == ButtonEvent::Confirm)
-        {
-            signalGenerator.toggleOutput();
-
-            updateUI();
-
-            return;
-        }
-
-
-        // BACK is intentionally not handled here.
-        // MenuManager will return to Main Menu.
     }
 
     // --------------------------------------------------
