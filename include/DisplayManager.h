@@ -45,6 +45,13 @@ public:
         bool editing
     );
 
+    void showOscilloscopeBaseline(
+        uint16_t averageRaw,
+        uint32_t millivolts,
+        uint16_t minRaw,
+        uint16_t maxRaw
+    );
+
 
 private:
     U8G2& mainDisplay;

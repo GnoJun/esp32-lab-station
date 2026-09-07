@@ -8,12 +8,14 @@
 #include "I2CScanner.h"
 #include "SignalGenerator.h"
 #include "SignalGeneratorPage.h"
+#include "OscilloscopeInput.h"
 
 ButtonManager buttonManager;
 MenuManager menuManager;
 I2CScanner i2cScanner;
 SignalGenerator signalGenerator;
 SignalGeneratorPage signalGeneratorPage;
+OscilloscopeInput oscilloscopeInput;
 
 // Main OLED: I2C 0x3C -> U8g2 address 0x78
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C
@@ -141,8 +143,11 @@ void updateUI()
 
         case AppPage::Oscilloscope:
 
-            displayManager.showToolPage(
-                "OSCILLOSCOPE"
+            displayManager.showOscilloscopeBaseline(
+                oscilloscopeInput.getAverageRaw(),
+                oscilloscopeInput.getAverageMillivolts(),
+                oscilloscopeInput.getMinRaw(),
+                oscilloscopeInput.getMaxRaw()
             );
 
             break;
@@ -311,11 +316,7 @@ void setup()
 
 
 
-    // -------------------------
-    // Oscilloscope input
-    // -------------------------
-
-    pinMode(Pins::SCOPE_IN, INPUT);
+    
 
 
     // -------------------------
@@ -336,6 +337,8 @@ void setup()
     u8g2_menu.setI2CAddress(0x7A);
 
     i2cScanner.begin();
+
+    oscilloscopeInput.begin();
 
     if (!signalGenerator.begin())
     {
@@ -391,6 +394,51 @@ void loop()
 
     AppPage pageBefore =
         menuManager.getCurrentPage();
+
+    // --------------------------------------------------
+    // Oscilloscope ADC baseline
+    // --------------------------------------------------
+
+    if (pageBefore == AppPage::Oscilloscope)
+    {
+        static unsigned long lastScopeUpdate = 0;
+
+        unsigned long now =
+            millis();
+
+
+        // Refresh about 5 times per second.
+        if (
+            now - lastScopeUpdate >= 200
+        )
+        {
+            lastScopeUpdate =
+                now;
+
+            oscilloscopeInput.sample();
+
+            updateUI();
+        }
+
+
+        // BACK still belongs to MenuManager.
+        if (event == ButtonEvent::Back)
+        {
+            bool changed =
+                menuManager.handleEvent(
+                    ButtonEvent::Back
+                );
+
+
+            if (changed)
+            {
+                updateUI();
+            }
+        }
+
+
+        return;
+    }
 
 
     // --------------------------------------------------
@@ -514,6 +562,14 @@ void loop()
     )
     {
         i2cScanner.scan();
+    }
+
+    if (
+        pageBefore != AppPage::Oscilloscope &&
+        pageAfter == AppPage::Oscilloscope
+    )
+    {
+        oscilloscopeInput.sample();
     }
 
 

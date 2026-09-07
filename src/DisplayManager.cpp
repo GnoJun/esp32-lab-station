@@ -694,3 +694,146 @@ void DisplayManager::showSignalGenerator(
 
     menuDisplay.sendBuffer();
 }
+
+void DisplayManager::showOscilloscopeBaseline(
+    uint16_t averageRaw,
+    uint32_t millivolts,
+    uint16_t minRaw,
+    uint16_t maxRaw
+)
+{
+    // ==================================================
+    // Main OLED
+    // ==================================================
+
+    mainDisplay.clearBuffer();
+
+    mainDisplay.setFont(
+        u8g2_font_6x12_tf
+    );
+
+
+    mainDisplay.drawStr(
+        0,
+        10,
+        "SCOPE ADC TEST"
+    );
+
+    mainDisplay.drawHLine(
+        0,
+        13,
+        128
+    );
+
+
+    char rawText[24];
+
+    snprintf(
+        rawText,
+        sizeof(rawText),
+        "Raw avg: %u",
+        averageRaw
+    );
+
+
+    mainDisplay.drawStr(
+        0,
+        28,
+        rawText
+    );
+
+
+    char voltageText[24];
+
+    snprintf(
+        voltageText,
+        sizeof(voltageText),
+        "ADC pin: %lu mV",
+        static_cast<unsigned long>(
+            millivolts
+        )
+    );
+
+
+    mainDisplay.drawStr(
+        0,
+        42,
+        voltageText
+    );
+
+
+    char rangeText[24];
+
+    snprintf(
+        rangeText,
+        sizeof(rangeText),
+        "Min:%u Max:%u",
+        minRaw,
+        maxRaw
+    );
+
+
+    mainDisplay.drawStr(
+        0,
+        57,
+        rangeText
+    );
+
+
+    mainDisplay.sendBuffer();
+
+
+    // ==================================================
+    // Menu OLED
+    // ==================================================
+
+    menuDisplay.clearBuffer();
+
+    menuDisplay.setFont(
+        u8g2_font_6x12_tf
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        10,
+        "OSCILLOSCOPE"
+    );
+
+    menuDisplay.drawHLine(
+        0,
+        13,
+        128
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        28,
+        "GPIO1 / ADC1"
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        40,
+        "12-bit / LIVE"
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        52,
+        "Value = ADC pin"
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        64,
+        "BACK: Return"
+    );
+
+
+    menuDisplay.sendBuffer();
+}
