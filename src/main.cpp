@@ -146,6 +146,7 @@ void updateUI()
             displayManager.showOscilloscopeBaseline(
                 oscilloscopeInput.getAverageRaw(),
                 oscilloscopeInput.getAverageMillivolts(),
+                oscilloscopeInput.getInputMillivolts(),
                 oscilloscopeInput.getMinRaw(),
                 oscilloscopeInput.getMaxRaw()
             );

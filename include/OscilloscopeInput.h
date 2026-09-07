@@ -18,6 +18,8 @@ public:
 
     uint16_t getMaxRaw() const;
 
+    uint32_t getInputMillivolts() const;
+
 
 private:
     static constexpr uint8_t SAMPLE_COUNT = 32;
@@ -29,4 +31,6 @@ private:
     uint16_t minRaw = 0;
 
     uint16_t maxRaw = 0;
+
+    static constexpr float INPUT_CALIBRATION_GAIN = 2.04424f;
 };

@@ -131,3 +131,15 @@ uint16_t OscilloscopeInput::getMaxRaw() const
 {
     return maxRaw;
 }
+
+uint32_t OscilloscopeInput::getInputMillivolts() const
+{
+    float calibrated =
+        averageMillivolts *
+        INPUT_CALIBRATION_GAIN;
+
+
+    return static_cast<uint32_t>(
+        calibrated + 0.5f
+    );
+}

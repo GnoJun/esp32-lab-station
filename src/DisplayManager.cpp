@@ -697,7 +697,8 @@ void DisplayManager::showSignalGenerator(
 
 void DisplayManager::showOscilloscopeBaseline(
     uint16_t averageRaw,
-    uint32_t millivolts,
+    uint32_t adcMillivolts,
+    uint32_t inputMillivolts,
     uint16_t minRaw,
     uint16_t maxRaw
 )
@@ -706,7 +707,7 @@ void DisplayManager::showOscilloscopeBaseline(
     // Main OLED
     // ==================================================
 
-    mainDisplay.clearBuffer();
+        mainDisplay.clearBuffer();
 
     mainDisplay.setFont(
         u8g2_font_6x12_tf
@@ -716,7 +717,7 @@ void DisplayManager::showOscilloscopeBaseline(
     mainDisplay.drawStr(
         0,
         10,
-        "SCOPE ADC TEST"
+        "SCOPE DC MONITOR"
     );
 
     mainDisplay.drawHLine(
@@ -726,41 +727,76 @@ void DisplayManager::showOscilloscopeBaseline(
     );
 
 
+    // --------------------------------------------------
+    // Input voltage
+    // --------------------------------------------------
+
+    char inputText[24];
+
+    snprintf(
+        inputText,
+        sizeof(inputText),
+        "Input: %lu.%03lu V",
+        static_cast<unsigned long>(
+            inputMillivolts / 1000
+        ),
+        static_cast<unsigned long>(
+            inputMillivolts % 1000
+        )
+    );
+
+    mainDisplay.drawStr(
+        0,
+        26,
+        inputText
+    );
+
+
+    // --------------------------------------------------
+    // ADC pin voltage
+    // --------------------------------------------------
+
+    char adcText[24];
+
+    snprintf(
+        adcText,
+        sizeof(adcText),
+        "ADC: %lu mV",
+        static_cast<unsigned long>(
+            adcMillivolts
+        )
+    );
+
+    mainDisplay.drawStr(
+        0,
+        38,
+        adcText
+    );
+
+
+    // --------------------------------------------------
+    // Raw average
+    // --------------------------------------------------
+
     char rawText[24];
 
     snprintf(
         rawText,
         sizeof(rawText),
-        "Raw avg: %u",
+        "Raw: %u",
         averageRaw
     );
 
-
     mainDisplay.drawStr(
         0,
-        28,
+        50,
         rawText
     );
 
 
-    char voltageText[24];
-
-    snprintf(
-        voltageText,
-        sizeof(voltageText),
-        "ADC pin: %lu mV",
-        static_cast<unsigned long>(
-            millivolts
-        )
-    );
-
-
-    mainDisplay.drawStr(
-        0,
-        42,
-        voltageText
-    );
-
+    // --------------------------------------------------
+    // Raw range
+    // --------------------------------------------------
 
     char rangeText[24];
 
@@ -772,10 +808,9 @@ void DisplayManager::showOscilloscopeBaseline(
         maxRaw
     );
 
-
     mainDisplay.drawStr(
         0,
-        57,
+        63,
         rangeText
     );
 

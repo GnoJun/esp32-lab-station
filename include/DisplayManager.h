@@ -47,7 +47,8 @@ public:
 
     void showOscilloscopeBaseline(
         uint16_t averageRaw,
-        uint32_t millivolts,
+        uint32_t adcMillivolts,
+        uint32_t inputMillivolts,
         uint16_t minRaw,
         uint16_t maxRaw
     );
