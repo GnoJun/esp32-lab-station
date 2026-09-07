@@ -59,7 +59,10 @@ public:
         uint16_t minRaw,
         uint16_t maxRaw,
         uint32_t sampleIntervalUs,
-        float frequencyHz
+        float frequencyHz,
+        uint32_t minMillivolts,
+        uint32_t maxMillivolts,
+        uint32_t peakToPeakMillivolts
     );
 
     void showOscilloscopeCapturing(

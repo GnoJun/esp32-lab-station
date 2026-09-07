@@ -10,6 +10,8 @@
 #include "SignalGeneratorPage.h"
 #include "OscilloscopeInput.h"
 #include "OscilloscopeCapture.h"
+#include "ScopeCalibration.h"
+#include "OscilloscopeMeasurements.h"
 
 ButtonManager buttonManager;
 MenuManager menuManager;
@@ -18,6 +20,10 @@ SignalGenerator signalGenerator;
 SignalGeneratorPage signalGeneratorPage;
 OscilloscopeInput oscilloscopeInput;
 OscilloscopeCapture oscilloscopeCapture;
+ScopeCalibration scopeCalibration;
+
+OscilloscopeMeasurements
+    oscilloscopeMeasurements;
 
 // Main OLED: I2C 0x3C -> U8g2 address 0x78
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C
@@ -177,7 +183,11 @@ void updateUI()
                 oscilloscopeCapture.getMinRaw(),
                 oscilloscopeCapture.getMaxRaw(),
                 oscilloscopeCapture.getSampleIntervalUs(),
-                oscilloscopeCapture.getMeasuredFrequencyHz()
+                oscilloscopeCapture.getMeasuredFrequencyHz(),
+
+                oscilloscopeMeasurements.getMinMillivolts(),
+                oscilloscopeMeasurements.getMaxMillivolts(),
+                oscilloscopeMeasurements.getPeakToPeakMillivolts()
             );
 
 
@@ -371,7 +381,12 @@ void setup()
     i2cScanner.begin();
 
     oscilloscopeInput.begin();
+
     oscilloscopeCapture.begin();
+
+    scopeCalibration.begin();
+
+    oscilloscopeMeasurements.begin();
 
     if (!signalGenerator.begin())
     {
@@ -504,11 +519,16 @@ void loop()
 
         if (frameComplete)
         {
+            oscilloscopeMeasurements.update(
+                oscilloscopeCapture.getMinRaw(),
+                oscilloscopeCapture.getMaxRaw(),
+                scopeCalibration
+            );
+
+
             updateUI();
 
 
-            // Immediately begin collecting
-            // the next frame.
             oscilloscopeCapture.startCapture();
         }
 

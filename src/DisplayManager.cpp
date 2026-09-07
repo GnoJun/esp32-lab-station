@@ -1,5 +1,31 @@
 #include "DisplayManager.h"
 
+namespace
+{
+    void formatVoltage(
+        char* buffer,
+        size_t bufferSize,
+        uint32_t millivolts
+    )
+    {
+        uint32_t centivolts =
+            (millivolts + 5) / 10;
+
+
+        snprintf(
+            buffer,
+            bufferSize,
+            "%lu.%02lu",
+            static_cast<unsigned long>(
+                centivolts / 100
+            ),
+            static_cast<unsigned long>(
+                centivolts % 100
+            )
+        );
+    }
+}
+
 
 DisplayManager::DisplayManager(
     U8G2& mainDisplay,
@@ -879,7 +905,10 @@ void DisplayManager::showOscilloscopeWaveform(
     uint16_t minRaw,
     uint16_t maxRaw,
     uint32_t sampleIntervalUs,
-    float frequencyHz
+    float frequencyHz,
+    uint32_t minMillivolts,
+    uint32_t maxMillivolts,
+    uint32_t peakToPeakMillivolts
 )
 {
     // ==================================================
@@ -963,12 +992,38 @@ void DisplayManager::showOscilloscopeWaveform(
         );
     }
 
+    char vppText[12];
 
-    mainDisplay.drawStr(
-        0,
-        7,
-        frequencyText
+    char minText[12];
+
+    char maxText[12];
+
+
+    formatVoltage(
+        vppText,
+        sizeof(vppText),
+        peakToPeakMillivolts
     );
+
+
+    formatVoltage(
+        minText,
+        sizeof(minText),
+        minMillivolts
+    );
+
+
+    formatVoltage(
+        maxText,
+        sizeof(maxText),
+        maxMillivolts
+    );
+
+        mainDisplay.drawStr(
+            0,
+            7,
+            frequencyText
+        );
 
 
     // Divider between information and waveform
@@ -977,9 +1032,34 @@ void DisplayManager::showOscilloscopeWaveform(
         9,
         128
     );
+
+    char voltageLine[32];
+
+
+    snprintf(
+        voltageLine,
+        sizeof(voltageLine),
+        "Min:%s Max:%s",
+        minText,
+        maxText
+    );
+
+
+    mainDisplay.drawStr(
+        0,
+        16,
+        voltageLine
+    );
+
+
+    mainDisplay.drawHLine(
+        0,
+        19,
+        128
+    );
     
     constexpr int WAVE_TOP =
-        11;
+        21;
 
     constexpr int WAVE_BOTTOM =
         63;
