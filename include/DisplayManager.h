@@ -53,6 +53,14 @@ public:
         uint16_t maxRaw
     );
 
+    void showOscilloscopeWaveform(
+        const uint16_t samples[],
+        uint16_t sampleCount,
+        uint16_t minRaw,
+        uint16_t maxRaw,
+        uint32_t sampleIntervalUs
+    );
+
 
 private:
     U8G2& mainDisplay;

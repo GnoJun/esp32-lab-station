@@ -872,3 +872,157 @@ void DisplayManager::showOscilloscopeBaseline(
 
     menuDisplay.sendBuffer();
 }
+
+void DisplayManager::showOscilloscopeWaveform(
+    const uint16_t samples[],
+    uint16_t sampleCount,
+    uint16_t minRaw,
+    uint16_t maxRaw,
+    uint32_t sampleIntervalUs
+)
+{
+    // ==================================================
+    // Main OLED - Waveform
+    // ==================================================
+
+    mainDisplay.clearBuffer();
+
+
+    // Horizontal center reference
+    mainDisplay.drawHLine(
+        0,
+        32,
+        128
+    );
+
+
+    uint16_t rawRange =
+        maxRaw - minRaw;
+
+
+    if (rawRange < 10)
+    {
+        rawRange = 10;
+    }
+
+
+    uint16_t pointsToDraw =
+        sampleCount;
+
+    if (pointsToDraw > 128)
+    {
+        pointsToDraw = 128;
+    }
+
+
+    for (uint16_t x = 1;
+         x < pointsToDraw;
+         x++)
+    {
+        uint16_t previousRaw =
+            samples[x - 1];
+
+        uint16_t currentRaw =
+            samples[x];
+
+
+        int previousY =
+            63 -
+            (
+                static_cast<uint32_t>(
+                    previousRaw - minRaw
+                ) * 63
+            ) / rawRange;
+
+
+        int currentY =
+            63 -
+            (
+                static_cast<uint32_t>(
+                    currentRaw - minRaw
+                ) * 63
+            ) / rawRange;
+
+
+        mainDisplay.drawLine(
+            x - 1,
+            previousY,
+            x,
+            currentY
+        );
+    }
+
+
+    mainDisplay.sendBuffer();
+
+
+    // ==================================================
+    // Menu OLED - Capture information
+    // ==================================================
+
+    menuDisplay.clearBuffer();
+
+    menuDisplay.setFont(
+        u8g2_font_6x12_tf
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        10,
+        "OSCILLOSCOPE"
+    );
+
+    menuDisplay.drawHLine(
+        0,
+        13,
+        128
+    );
+
+
+    char intervalText[24];
+
+    snprintf(
+        intervalText,
+        sizeof(intervalText),
+        "Sample: %lu us",
+        static_cast<unsigned long>(
+            sampleIntervalUs
+        )
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        28,
+        intervalText
+    );
+
+
+    char rangeText[24];
+
+    snprintf(
+        rangeText,
+        sizeof(rangeText),
+        "Raw: %u-%u",
+        minRaw,
+        maxRaw
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        41,
+        rangeText
+    );
+
+
+    menuDisplay.drawStr(
+        0,
+        55,
+        "BACK: Return"
+    );
+
+
+    menuDisplay.sendBuffer();
+}

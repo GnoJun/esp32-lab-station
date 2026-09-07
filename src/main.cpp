@@ -9,6 +9,7 @@
 #include "SignalGenerator.h"
 #include "SignalGeneratorPage.h"
 #include "OscilloscopeInput.h"
+#include "OscilloscopeCapture.h"
 
 ButtonManager buttonManager;
 MenuManager menuManager;
@@ -16,6 +17,7 @@ I2CScanner i2cScanner;
 SignalGenerator signalGenerator;
 SignalGeneratorPage signalGeneratorPage;
 OscilloscopeInput oscilloscopeInput;
+OscilloscopeCapture oscilloscopeCapture;
 
 // Main OLED: I2C 0x3C -> U8g2 address 0x78
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C
@@ -142,16 +144,34 @@ void updateUI()
         // ==========================================
 
         case AppPage::Oscilloscope:
+        {
+            uint16_t samples[
+                OscilloscopeCapture::SAMPLE_COUNT
+            ];
 
-            displayManager.showOscilloscopeBaseline(
-                oscilloscopeInput.getAverageRaw(),
-                oscilloscopeInput.getAverageMillivolts(),
-                oscilloscopeInput.getInputMillivolts(),
-                oscilloscopeInput.getMinRaw(),
-                oscilloscopeInput.getMaxRaw()
+
+            for (
+                uint16_t i = 0;
+                i < OscilloscopeCapture::SAMPLE_COUNT;
+                i++
+            )
+            {
+                samples[i] =
+                    oscilloscopeCapture.getSample(i);
+            }
+
+
+            displayManager.showOscilloscopeWaveform(
+                samples,
+                OscilloscopeCapture::SAMPLE_COUNT,
+                oscilloscopeCapture.getMinRaw(),
+                oscilloscopeCapture.getMaxRaw(),
+                oscilloscopeCapture.getSampleIntervalUs()
             );
 
+
             break;
+        }
 
 
         case AppPage::SignalGenerator:
@@ -340,6 +360,7 @@ void setup()
     i2cScanner.begin();
 
     oscilloscopeInput.begin();
+    oscilloscopeCapture.begin();
 
     if (!signalGenerator.begin())
     {
@@ -410,13 +431,13 @@ void loop()
 
         // Refresh about 5 times per second.
         if (
-            now - lastScopeUpdate >= 200
+            now - lastScopeUpdate >= 100
         )
         {
             lastScopeUpdate =
                 now;
 
-            oscilloscopeInput.sample();
+            oscilloscopeCapture.capture();
 
             updateUI();
         }
@@ -570,7 +591,7 @@ void loop()
         pageAfter == AppPage::Oscilloscope
     )
     {
-        oscilloscopeInput.sample();
+        oscilloscopeCapture.capture();
     }
 
 
