@@ -464,7 +464,7 @@ bool OscilloscopeCapture::finishFrame()
     }
 
 
-
+    calculateFrequency();
 
     capturing =
         false;
@@ -509,4 +509,194 @@ bool OscilloscopeCapture::captureFastRemainder()
 
 
     return finishFrame();
+}
+
+// --------------------------------------------------
+// Calculate Frequency
+// --------------------------------------------------
+
+void OscilloscopeCapture::calculateFrequency()
+{
+    measuredFrequencyHz =
+        0.0f;
+
+
+    uint16_t signalRange =
+        maxRaw - minRaw;
+
+
+    // Signal too small to measure reliably.
+    if (signalRange < MIN_TRIGGER_RANGE_RAW)
+    {
+        return;
+    }
+
+
+    // --------------------------------------------------
+    // Add hysteresis around the middle of the waveform.
+    //
+    // Low threshold  = 40%
+    // High threshold = 60%
+    //
+    // This prevents ADC noise around 50% from being
+    // counted as multiple rising edges.
+    // --------------------------------------------------
+
+    uint16_t lowThreshold =
+        minRaw +
+        (
+            static_cast<uint32_t>(
+                signalRange
+            ) * 4
+        ) / 10;
+
+
+    uint16_t highThreshold =
+        minRaw +
+        (
+            static_cast<uint32_t>(
+                signalRange
+            ) * 6
+        ) / 10;
+
+
+    int16_t firstEdge =
+        -1;
+
+    int16_t lastEdge =
+        -1;
+
+    uint16_t edgeCount =
+        0;
+
+
+    // --------------------------------------------------
+    // If the frame really started from our trigger,
+    // sample 0 represents the first rising edge.
+    // --------------------------------------------------
+
+    if (frameStartedOnTrigger)
+    {
+        firstEdge = 0;
+
+        lastEdge = 0;
+
+        edgeCount = 1;
+    }
+
+
+    // The detector must first see a LOW level
+    // before it is armed for the next rising edge.
+    bool armed =
+        samples[0] <= lowThreshold;
+
+
+    // --------------------------------------------------
+    // Find rising edges
+    // --------------------------------------------------
+
+    for (
+        uint16_t i = 1;
+        i < SAMPLE_COUNT;
+        i++
+    )
+    {
+        // Wait until signal goes sufficiently LOW.
+        if (!armed)
+        {
+            if (samples[i] <= lowThreshold)
+            {
+                armed = true;
+            }
+
+            continue;
+        }
+
+
+        // Armed + sufficiently HIGH = rising edge.
+        if (samples[i] >= highThreshold)
+        {
+            if (firstEdge < 0)
+            {
+                firstEdge =
+                    static_cast<int16_t>(i);
+            }
+
+
+            lastEdge =
+                static_cast<int16_t>(i);
+
+
+            edgeCount++;
+
+
+            // Must return LOW before another
+            // edge may be counted.
+            armed = false;
+        }
+    }
+
+
+    // We need at least two rising edges
+    // to measure one complete period.
+    if (
+        edgeCount < 2 ||
+        firstEdge < 0 ||
+        lastEdge <= firstEdge
+    )
+    {
+        return;
+    }
+
+
+    // --------------------------------------------------
+    // Average several periods when possible.
+    // --------------------------------------------------
+
+    float periodCount =
+        static_cast<float>(
+            edgeCount - 1
+        );
+
+
+    float sampleSpan =
+        static_cast<float>(
+            lastEdge - firstEdge
+        );
+
+
+    float averagePeriodSamples =
+        sampleSpan /
+        periodCount;
+
+
+    // Too few samples per cycle gives unreliable
+    // frequency / aliasing.
+    if (averagePeriodSamples < 4.0f)
+    {
+        return;
+    }
+
+
+    float periodUs =
+        averagePeriodSamples *
+        static_cast<float>(
+            getSampleIntervalUs()
+        );
+
+
+    if (periodUs <= 0.0f)
+    {
+        return;
+    }
+
+
+    measuredFrequencyHz =
+        1000000.0f /
+        periodUs;
+}
+
+float OscilloscopeCapture::getMeasuredFrequencyHz() const
+{
+    return measuredFrequencyHz;
 }

@@ -878,7 +878,8 @@ void DisplayManager::showOscilloscopeWaveform(
     uint16_t sampleCount,
     uint16_t minRaw,
     uint16_t maxRaw,
-    uint32_t sampleIntervalUs
+    uint32_t sampleIntervalUs,
+    float frequencyHz
 )
 {
     // ==================================================
@@ -887,14 +888,105 @@ void DisplayManager::showOscilloscopeWaveform(
 
     mainDisplay.clearBuffer();
 
+    // --------------------------------------------------
+    // Frequency information
+    // --------------------------------------------------
 
-    // Horizontal center reference
-    mainDisplay.drawHLine(
-        0,
-        32,
-        128
+    mainDisplay.setFont(
+        u8g2_font_5x7_tf
     );
 
+
+    char frequencyText[24];
+
+
+    if (frequencyHz > 0.0f)
+    {
+        // ----------------------------------------------
+        // Below 1 kHz -> display in Hz
+        // ----------------------------------------------
+
+        if (frequencyHz < 1000.0f)
+        {
+            uint32_t tenthsHz =
+                static_cast<uint32_t>(
+                    frequencyHz * 10.0f +
+                    0.5f
+                );
+
+
+            snprintf(
+                frequencyText,
+                sizeof(frequencyText),
+                "F: %lu.%lu Hz",
+                static_cast<unsigned long>(
+                    tenthsHz / 10
+                ),
+                static_cast<unsigned long>(
+                    tenthsHz % 10
+                )
+            );
+        }
+
+        // ----------------------------------------------
+        // 1 kHz and above
+        // ----------------------------------------------
+
+        else
+        {
+            uint32_t tenthsKHz =
+                static_cast<uint32_t>(
+                    frequencyHz / 100.0f +
+                    0.5f
+                );
+
+
+            snprintf(
+                frequencyText,
+                sizeof(frequencyText),
+                "F: %lu.%lu kHz",
+                static_cast<unsigned long>(
+                    tenthsKHz / 10
+                ),
+                static_cast<unsigned long>(
+                    tenthsKHz % 10
+                )
+            );
+        }
+    }
+    else
+    {
+        snprintf(
+            frequencyText,
+            sizeof(frequencyText),
+            "F: --"
+        );
+    }
+
+
+    mainDisplay.drawStr(
+        0,
+        7,
+        frequencyText
+    );
+
+
+    // Divider between information and waveform
+    mainDisplay.drawHLine(
+        0,
+        9,
+        128
+    );
+    
+    constexpr int WAVE_TOP =
+        11;
+
+    constexpr int WAVE_BOTTOM =
+        63;
+
+    constexpr int WAVE_HEIGHT =
+        WAVE_BOTTOM - WAVE_TOP;
+   
 
     uint16_t rawRange =
         maxRaw - minRaw;
@@ -927,20 +1019,22 @@ void DisplayManager::showOscilloscopeWaveform(
 
 
         int previousY =
-            63 -
+            WAVE_BOTTOM -
             (
                 static_cast<uint32_t>(
                     previousRaw - minRaw
-                ) * 63
+                ) *
+                WAVE_HEIGHT
             ) / rawRange;
 
 
         int currentY =
-            63 -
+            WAVE_BOTTOM -
             (
                 static_cast<uint32_t>(
                     currentRaw - minRaw
-                ) * 63
+                ) *
+                WAVE_HEIGHT
             ) / rawRange;
 
 

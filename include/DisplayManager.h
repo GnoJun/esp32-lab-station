@@ -58,7 +58,8 @@ public:
         uint16_t sampleCount,
         uint16_t minRaw,
         uint16_t maxRaw,
-        uint32_t sampleIntervalUs
+        uint32_t sampleIntervalUs,
+        float frequencyHz
     );
 
     void showOscilloscopeCapturing(

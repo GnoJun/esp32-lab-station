@@ -176,7 +176,8 @@ void updateUI()
                 OscilloscopeCapture::SAMPLE_COUNT,
                 oscilloscopeCapture.getMinRaw(),
                 oscilloscopeCapture.getMaxRaw(),
-                oscilloscopeCapture.getSampleIntervalUs()
+                oscilloscopeCapture.getSampleIntervalUs(),
+                oscilloscopeCapture.getMeasuredFrequencyHz()
             );
 
 
