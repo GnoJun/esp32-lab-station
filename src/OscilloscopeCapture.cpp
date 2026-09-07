@@ -44,21 +44,18 @@ uint32_t OscilloscopeCapture::intervalForIndex(
     switch (index)
     {
         case 0:
-            return 50;
-
-        case 1:
             return 100;
 
-        case 2:
+        case 1:
             return 500;
 
-        case 3:
+        case 2:
             return 1000;
 
-        case 4:
+        case 3:
             return 5000;
 
-        case 5:
+        case 4:
             return 10000;
 
         default:

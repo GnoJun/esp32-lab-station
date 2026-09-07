@@ -36,7 +36,7 @@ public:
 
 
 private:
-    static constexpr uint8_t TIMEBASE_COUNT = 6;
+    static constexpr uint8_t TIMEBASE_COUNT = 5;
 
     uint16_t samples[SAMPLE_COUNT];
 
@@ -53,13 +53,12 @@ private:
     uint16_t sampleIndex = 0;
 
 
-    // 0 = 50 us
-    // 1 = 100 us
-    // 2 = 500 us
-    // 3 = 1 ms
-    // 4 = 5 ms
-    // 5 = 10 ms
-    uint8_t timebaseIndex = 1;
+    // 0 = 100 us
+    // 1 = 500 us
+    // 2 = 1 ms
+    // 3 = 5 ms
+    // 4 = 10 ms
+    uint8_t timebaseIndex = 0;
 
 
     bool capturing = false;
